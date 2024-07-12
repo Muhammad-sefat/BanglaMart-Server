@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const mongoose = require("mongoose");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion } = require("mongodb");
@@ -44,6 +45,24 @@ async function run() {
       });
     });
 
+    const Product = mongoose.model("Product", {
+      id: {
+        type: Number,
+        require: true,
+      },
+      name: {
+        type: Number,
+        require: true,
+      },
+      image: {
+        type: Number,
+        require: true,
+      },
+      category: {
+        type: Number,
+        require: true,
+      },
+    });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
