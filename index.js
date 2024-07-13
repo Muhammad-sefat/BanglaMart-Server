@@ -150,6 +150,54 @@ app.get("/allproducts", async (req, res) => {
   res.send(products);
 });
 
+const Users = mongoose.model("Users", {
+  name: {
+    type: String,
+  },
+  email: {
+    type: String,
+    unique: true,
+  },
+  password: {
+    type: String,
+  },
+  cartdata: {
+    type: Object,
+  },
+  date: {
+    type: Date,
+    default: Date.now(),
+  },
+});
+
+app.post("/signup", async (req, res) => {
+  let check = await Users.findOne({ email: req.body.email });
+  if (check) {
+    return res
+      .status(400)
+      .json({ success: false, errors: "Found Existing Email" });
+  }
+  let cart = {};
+  for (let i = 0; i < 300; i++) {
+    cart[i] = 0;
+  }
+
+  const user = new Users({
+    email: req.body.email,
+    name: req.body.name,
+    password: req.body.password,
+    cartdata: cart,
+  });
+  await user.save();
+  const data = {
+    user: {
+      id: user.id,
+    },
+  };
+  const token = jwt.sign(data, "secret_ecom");
+  res.json({ success: true, token });
+});
+
 app.get("/", (req, res) => {
   res.send("Server is Fully Running");
 });
