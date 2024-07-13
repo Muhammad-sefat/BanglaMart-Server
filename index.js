@@ -144,6 +144,12 @@ app.post("/removeproduct", async (req, res) => {
   }
 });
 
+app.get("/allproducts", async (req, res) => {
+  const products = await Product.find({});
+  console.log("All products here");
+  res.send(products);
+});
+
 app.get("/", (req, res) => {
   res.send("Server is Fully Running");
 });
