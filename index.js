@@ -232,6 +232,45 @@ app.get("/popularwomen", async (req, res) => {
   res.send(popular_women);
 });
 
+// middlewere
+
+const verifytoken = (req, res, next) => {
+  const token = req.header("auth-token");
+  if (!token) {
+    res.status(401).send({ errors: "Please Authenticate using valid user" });
+  } else {
+    try {
+      const data = jwt.verify(token, "secret_ecom");
+      req.user = data.id;
+      next();
+    } catch (error) {
+      res.status(401).send({ errors: "Please Authenticate using valid user" });
+    }
+  }
+};
+
+// addtocart
+app.post("/addtocart", verifytoken, async (req, res) => {
+  let userData = await Users.find({ _id: req.user.id });
+  userData.cartdata[req.body.itemId] += 1;
+  await Users.findOneAndUpdate(
+    { _id: req.user.id },
+    { cartdata: userData.cartdata }
+  );
+  res.send("Added");
+});
+
+// removefromcart
+app.post("/removetocart", verifytoken, async (req, res) => {
+  let userData = await Users.find({ _id: req.user.id });
+  userData.cartdata[req.body.itemId] -= 1;
+  await Users.findOneAndUpdate(
+    { _id: req.user.id },
+    { cartdata: userData.cartdata }
+  );
+  res.send("Added");
+});
+
 app.get("/", (req, res) => {
   res.send("Server is Fully Running");
 });
