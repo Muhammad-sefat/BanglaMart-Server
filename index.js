@@ -1,18 +1,24 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const mongoose = require("mongoose");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const mongoose = require("mongoose");
 const path = require("path");
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5000", "http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 const uri =
-  `mongodb+srv:${process.env.USER_NAME}:${process.env.USER_PASS}@cluster0.dbn21dt.mongodb.net?appName=Cluster0` ||
+  `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASS}@cluster0.dbn21dt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0` ||
   "your_mongodb_uri_here";
 
 // Mongoose connection
