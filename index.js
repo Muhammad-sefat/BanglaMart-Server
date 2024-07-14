@@ -171,31 +171,38 @@ const Users = mongoose.model("Users", {
 });
 
 app.post("/signup", async (req, res) => {
-  let check = await Users.findOne({ email: req.body.email });
-  if (check) {
-    return res
-      .status(400)
-      .json({ success: false, errors: "Found Existing Email" });
-  }
-  let cart = {};
-  for (let i = 0; i < 300; i++) {
-    cart[i] = 0;
-  }
+  try {
+    let check = await Users.findOne({ email: req.body.email });
+    if (check) {
+      return res
+        .status(400)
+        .json({ success: false, errors: "Found Existing Email" });
+    }
 
-  const user = new Users({
-    email: req.body.email,
-    name: req.body.name,
-    password: req.body.password,
-    cartdata: cart,
-  });
-  await user.save();
-  const data = {
-    user: {
-      id: user.id,
-    },
-  };
-  const token = jwt.sign(data, "secret_ecom");
-  res.json({ success: true, token });
+    let cart = {};
+    for (let i = 1; i <= 300; i++) {
+      cart[i] = 0; // Initialize cart with product IDs as keys and 0 as values
+    }
+
+    const user = new Users({
+      email: req.body.email,
+      name: req.body.name,
+      password: req.body.password,
+      cartdata: cart,
+    });
+
+    await user.save();
+    const data = {
+      user: {
+        id: user.id,
+      },
+    };
+    const token = jwt.sign(data, "secret_ecom");
+    res.json({ success: true, token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ errors: "Server error" });
+  }
 });
 
 app.post("/login", async (req, res) => {
@@ -241,7 +248,7 @@ const verifytoken = (req, res, next) => {
   } else {
     try {
       const data = jwt.verify(token, "secret_ecom");
-      req.user = data.id;
+      req.user = data.user;
       next();
     } catch (error) {
       res.status(401).send({ errors: "Please Authenticate using valid user" });
@@ -250,25 +257,66 @@ const verifytoken = (req, res, next) => {
 };
 
 // addtocart
-app.post("/addtocart", verifytoken, async (req, res) => {
-  let userData = await Users.find({ _id: req.user.id });
-  userData.cartdata[req.body.itemId] += 1;
-  await Users.findOneAndUpdate(
-    { _id: req.user.id },
-    { cartdata: userData.cartdata }
-  );
-  res.send("Added");
+app.post("/addtoCart", verifytoken, async (req, res) => {
+  try {
+    console.log("added", req.body);
+    let userData = await Users.findOne({ _id: req.user.id });
+    if (!userData) {
+      return res.status(404).send({ errors: "User not found" });
+    }
+
+    if (!userData.cartdata) {
+      userData.cartdata = {};
+    }
+
+    if (!userData.cartdata[req.body.itemId]) {
+      userData.cartdata[req.body.itemId] = 0;
+    }
+
+    userData.cartdata[req.body.itemId] += 1;
+    await Users.findOneAndUpdate(
+      { _id: req.user.id },
+      { cartdata: userData.cartdata }
+    );
+    res.send({ success: true, message: "Added to cart" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ errors: "Server error" });
+  }
 });
 
 // removefromcart
 app.post("/removetocart", verifytoken, async (req, res) => {
-  let userData = await Users.find({ _id: req.user.id });
+  let userData = await Users.findOne({ _id: req.user.id });
+  if (!userData) {
+    return res.status(404).send({ errors: "User not found" });
+  }
+  if (!userData.cartdata || !userData.cartdata[req.body.itemId]) {
+    return res.status(400).send({ errors: "Item not found in cart" });
+  }
   userData.cartdata[req.body.itemId] -= 1;
   await Users.findOneAndUpdate(
     { _id: req.user.id },
     { cartdata: userData.cartdata }
   );
-  res.send("Added");
+  res.send("Removed");
+});
+
+// getcartitem
+app.post("/getcart", verifytoken, async (req, res) => {
+  try {
+    let userData = await Users.findOne({ _id: req.user.id });
+    if (!userData) {
+      return res.status(404).send({ errors: "User not found" });
+    }
+    if (!userData.cartdata) {
+      return res.status(400).send({ errors: "Cart data not found" });
+    }
+    res.json(userData.cartdata);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ errors: "Server error" });
+  }
 });
 
 app.get("/", (req, res) => {
