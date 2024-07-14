@@ -225,6 +225,13 @@ app.get("/newcollection", async (req, res) => {
   res.send(newcollection);
 });
 
+// popularwomen
+app.get("/popularwomen", async (req, res) => {
+  const products = await Product.find({ category: "women" });
+  const popular_women = products.slice(0, 4);
+  res.send(popular_women);
+});
+
 app.get("/", (req, res) => {
   res.send("Server is Fully Running");
 });
