@@ -198,6 +198,33 @@ app.post("/signup", async (req, res) => {
   res.json({ success: true, token });
 });
 
+app.post("/login", async (req, res) => {
+  let user = await Users.findOne({ email: req.body.email });
+  if (user) {
+    const comparePass = req.body.password === user.password;
+    if (comparePass) {
+      const data = {
+        user: {
+          id: user.id,
+        },
+      };
+      const token = jwt.sign(data, "secret_ecom");
+      res.json({ success: true, token });
+    } else {
+      res.json({ success: false, errors: "Password Wrong" });
+    }
+  } else {
+    res.json({ success: false, errors: "Wrong Email ID" });
+  }
+});
+
+// newCollection
+app.get("/newcollection", async (req, res) => {
+  const products = await Product.find({});
+  const newcollection = products.slice(1).slice(-8);
+  res.send(newcollection);
+});
+
 app.get("/", (req, res) => {
   res.send("Server is Fully Running");
 });
