@@ -11,7 +11,9 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const uri = process.env.MONGODB_URL || "your_mongodb_uri_here";
+const uri =
+  `mongodb+srv:${process.env.USER_NAME}:${process.env.USER_PASS}@cluster0.dbn21dt.mongodb.net?appName=Cluster0` ||
+  "your_mongodb_uri_here";
 
 // Mongoose connection
 mongoose.connect(uri, {
